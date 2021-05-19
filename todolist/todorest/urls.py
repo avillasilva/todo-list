@@ -5,5 +5,6 @@ from . import views
 
 app_name = 'todorest'
 urlpatterns = [
-    path('register', views.register_user)
+    path('register', views.register_user),
+    path('users/<int:pk>/lists', views.crud_list)
 ]
