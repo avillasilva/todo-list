@@ -14,11 +14,11 @@ class Category(models.Model):
     description = models.CharField(max_length=200)
 
 class Task(models.Model):
-    ownerList = models.OneToOneField(TaskList, on_delete=models.CASCADE)
+    ownerList = models.ForeignKey(TaskList, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, null=True,blank=True)
     deadline = models.DateTimeField(default=date.today+timedelta(hours=6))
     description = models.CharField(max_length=200)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
 
 
