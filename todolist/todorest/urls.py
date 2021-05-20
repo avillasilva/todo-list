@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.urls.resolvers import URLPattern
 
 from . import views
@@ -6,10 +6,15 @@ from . import views
 app_name = 'todorest'
 urlpatterns = [
     path('register', views.register_user),
-    path('users/<int:pk>/lists', views.crud_list),
-    path('users/<int:pk>/tasks', views.crud_tasks),
-    path('users/<int:pk>/category', views.crud_category)
+    path('login', views.login_user),
+    path('logout', views.logout_user),
+    
+    path('tasklist/', views.create_or_get_lists, name='create_or_get_lists'),
+    path('tasklist/<int:list_id>', views.crud_list, name='crud_list'),
+    
+    path('task/', views.create_or_get_tasks, name='create_or_get_tasks'),
+    path('task/<int:task_id>', views.crud_task, name='crud_task'),
+
+    path('category/', views.create_or_get_categories, name='create_or_get_categories'),
+    path('category/<int:category_id>', views.crud_category, name='crud_category')
 ]
-# todorest/<int:userId>/list/<int:listId>
-# todorest/<int:userId>/task/<int:taskId>
-# todorest/<int:userId>/category/<int:categoryId>

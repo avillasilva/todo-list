@@ -9,11 +9,17 @@ class TaskList(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, null=True, blank=True)
 
+    def __str__(self):
+        return self.title
+
 
 class Category(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200, null=True, blank=True)
     description = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.title
 
 
 class Task(models.Model):
@@ -23,3 +29,6 @@ class Task(models.Model):
     deadline = models.DateTimeField(
         default=django.utils.timezone.now()+timedelta(hours=6))
     description = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.title
