@@ -29,7 +29,6 @@ def login_user(request):
         return HttpResponse('Error', status=400)
 
 def logout_user(request):
-    print(request.encode('utf-8'))
     logout(request)
     return HttpResponse('Logged out')
 
@@ -38,46 +37,53 @@ def logout_user(request):
 def create_list(request):
     data = json.loads(request.body.decode('utf-8'))
     try:
-        user = User.objects.get(pk=data.get('user_id'))
-        tasklist = TaskList(owner=user, title=data.get('title'))
+        tasklist = TaskList(owner=request.user, title=data.get('title'))
         tasklist.save()
-        return HttpResponse(tasklist)
+        return JsonResponse(tasklist_encoder(tasklist))
     except User.DoesNotExist:
-        return HttpResponse('user does not exist')
+        return HttpResponse('User does not exist', status=400)
 
 def get_lists(request):
-    data = json.loads(request.body.decode('utf-8'))
     try:
-        lists = TaskList.objects.filter(owner=data.get('user_id'))
-        return HttpResponse(lists)
+        lists = TaskList.objects.filter(owner=request.user)
+        return JsonResponse([tasklist_encoder(l) for l in lists], safe=False)
     except Exception as e:
-        return HttpResponse(e)
+        return HttpResponse(str(e), status=400)
 
 def get_list(request, list_id):
     try:
         tasklist = TaskList.objects.get(pk=list_id)
-        return HttpResponse(tasklist)
+        return JsonResponse(tasklist_encoder(tasklist))
     except TaskList.DoesNotExist:
-        return HttpResponse('tasklist does not exist')
+        return HttpResponse('Tasklist does not exist', status=400)
 
 
 def update_list(request, list_id):
     data = json.loads(request.body.decode('utf-8'))
     try:
         tasklist = TaskList.objects.get(pk=list_id)
-        tasklist.title = data.get('new_title')
+        
+        if tasklist.owner.id != request.user.id:
+            raise Exception('Not allowed')
+        
+        tasklist.title = data.get('title')
         tasklist.save()
-        return HttpResponse('Title changed')
+        return JsonResponse(tasklist_encoder(tasklist))
     except TaskList.DoesNotExist:
-        return HttpResponse('tasklist does not exist')
+        return HttpResponse('Tasklist does not exist', status=400)
 
 
 def delete_list(request, list_id):
     try:
-        TaskList.objects.get(pk=list_id).delete()
-        return HttpResponse('tasklist deleted')
+        tasklist = TaskList.objects.get(pk=list_id)
+
+        if tasklist.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
+        tasklist.delete()
+        return JsonResponse({ 'message': 'tasklist deleted' })
     except TaskList.DoesNotExist:
-        return HttpResponse('tasklist not found')
+        return HttpResponse('Tasklist does not exist', status=400)
 
 @login_required
 def create_or_get_lists(request):
@@ -105,49 +111,72 @@ def create_task(request):
     try:
         tasklist = TaskList.objects.get(pk=data.get('list_id'))
         category = Category.objects.get(pk=data.get('category_id'))
-        print(data)
+
+        if tasklist.owner.id != request.user.id or category.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
         task = Task(ownerList=tasklist, title=data.get('title'), category=category, description=data.get('description'))
         task.deadline =  datetime.strptime(data.get('deadline'), "%Y-%m-%d")
         task.save()
-        return HttpResponse(task.id)
-    except Exception:
-        return HttpResponse('Error')
+        return JsonResponse(task_encoder(task), safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
-# Make this method return all the tasks of an user
 def get_tasks(request):
     try:
-        tasks = Task.objects.all()
-        return HttpResponse(tasks)
-    except Exception:
-        return HttpResponse('There is no tasks')
+        tasklists = TaskList.objects.filter(owner=request.user)
+        tasks = []
+        for tasklist in tasklists:
+            for task in Task.objects.filter(ownerList=tasklist.id):
+                tasks.append(task_encoder(task))
+        
+        return JsonResponse(tasks, safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 def get_task(request, task_id):
-    data = json.loads(request.body.decode('utf-8'))
-    if data.get('list_id'):
-        return HttpResponse(Task.objects.filter(ownerList=data.get('list_id')))
-    else:
-        return HttpResponse(Task.objects.get(pk=task_id))
+    try:
+        task = Task.objects.get(pk=task_id)
+
+        if task.ownerList.owner.id != request.user.id:
+            raise Exception('Not allowed')
+        
+        return JsonResponse(task_encoder(task), safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 
 def update_task(request, task_id):
     data = json.loads(request.body.decode('utf-8'))
     try:
+        tasklist = TaskList.objects.get(pk=data.get('list_id'))
+        category = Category.objects.get(pk=data.get('category_id'))
         task = Task.objects.get(pk=task_id)
+
+        if task.ownerList.owner.id != request.user.id or tasklist.owner.id != request.user.id or category.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
+        task.ownerList = tasklist
+        task.category = category
         task.title = data.get('title')
-        task.category_id = data.get('category_id')
         task.description = data.get('description')
         task.save()
-        return HttpResponse(task.id)
-    except Exception:
-        return HttpResponse('Error')
+        return JsonResponse(task_encoder(task), safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 
 def delete_task(request, task_id):
     try:
-        Task.objects.get(pk=task_id).delete()
-        return HttpResponse('Deleted')
+        task = Task.objects.get(pk=task_id)
+
+        if task.ownerList.owner.id != request.user.id:
+            raise Exception('Not allowed')
+        
+        task.delete()
+        return JsonResponse({ 'message': 'Task deleted' })
     except Task.DoesNotExist:
-        return HttpResponse('Error')
+        return HttpResponse('Task does not exist', status=400)
 
 @login_required
 def create_or_get_tasks(request):
@@ -172,48 +201,56 @@ def crud_task(request, task_id):
 def create_category(request):
     data = json.loads(request.body.decode('utf-8'))
     try:
-        user = User.objects.get(pk=data.get('user_id'))
+        user = User.objects.get(pk=request.user.id)
         category = Category(owner=user,
                             title=data.get('title'),
                             description=data.get('description'))
         category.save()
-        return HttpResponse(category.title)
+        return JsonResponse(category_encoder(category), safe=False)
     except User.DoesNotExist:
         return HttpResponse('User does not exist')
 
 def get_categories(request):
-    data = json.loads(request.body.decode('utf-8'))
     try:
-        categories = Category.objects.filter(owner=data.get('user_id'))
-        return HttpResponse(categories)
-    except Exception:
-        return HttpResponse('Error')
+        categories = Category.objects.filter(owner=request.user)
+        return JsonResponse([category_encoder(c) for c in categories], safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 def get_category(request, category_id):
     try:
         category = Category.objects.get(pk=category_id)
-        return HttpResponse(category.title)
+        if category.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
+        return JsonResponse(category_encoder(category), safe=False)
     except Category.DoesNotExist:
-        return HttpResponse('category does not exist')
+        return HttpResponse('category does not exist', status=400)
 
 def update_category(request, category_id):
     data = json.loads(request.body.decode('utf-8'))
     try:
         category = Category.objects.get(pk=category_id)
+        if category.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
         category.title = data.get('title')
         category.description = data.get('description')
         category.save()
-        return HttpResponse(category.title)
-    except Exception:
-        return HttpResponse('Error')
+        return JsonResponse(category_encoder(category), safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 
 def delete_category(request, category_id):
     try:
-        Category.objects.get(pk=category_id).delete()
-        return HttpResponse('Deleted')
-    except Exception:
-        return HttpResponse('Error')
+        category = Category.objects.get(pk=category_id)
+        if category.owner.id != request.user.id:
+            raise Exception('Not allowed')
+        category.delete()
+        return JsonResponse({ 'message': 'Category deleted' })
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
 @login_required
 def create_or_get_categories(request):

@@ -1,28 +1,15 @@
-from json import JSONEncoder
-from typing import Any
+from .models import *
 
-class TaskListEncoder(JSONEncoder):
-    def default(self, o):
-        if isinstance(self, o):
-            return { 'title': o.title, 'owner': o.owner}
-        
-        return super().default(o)
+def tasklist_encoder(tasklist):
+    return { 'id': tasklist.id, 'title': tasklist.title, 'owner': tasklist.owner.username }
 
-class CategoryEncoder(JSONEncoder):
-    def default(self, o):
-        if isinstance(self, o):
-            return { 'title': o.title, 'owner': o.owner, 'description': o.description}
-        
-        return super().default(o)
+def category_encoder(category):
+    return { 'id': category.id, 'title': category.title, 'description': category.description }
 
-
-class TaskEncoder(JSONEncoder):
-    def default(self, o):
-        if isinstance(self, o):
-            return { 'title': o.title, 
-                    'owner_list': o.ownerList, 
-                    'description': o.description,
-                    'deadline': o.deadline,
-                    'category': o.category }
-        
-        return super().default(o)
+def task_encoder(task):
+    return { 'id': task.id,
+            'title': task.title,
+            'owner_list': tasklist_encoder(task.ownerList),
+            'description': task.description,
+            'deadline': task.deadline,
+            'category': category_encoder(task.category) }
