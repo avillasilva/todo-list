@@ -53,6 +53,10 @@ def get_lists(request):
 def get_list(request, list_id):
     try:
         tasklist = TaskList.objects.get(pk=list_id)
+        
+        if tasklist.owner.id != request.user.id:
+            raise Exception('Not allowed')
+        
         return JsonResponse(tasklist_encoder(tasklist))
     except TaskList.DoesNotExist:
         return HttpResponse('Tasklist does not exist', status=400)
