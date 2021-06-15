@@ -12,4 +12,5 @@ def task_encoder(task):
             'owner_list': tasklist_encoder(task.ownerList),
             'description': task.description,
             'deadline': task.deadline,
-            'category': category_encoder(task.category) }
+            'category': category_encoder(task.category),
+            'finished': task.finished }

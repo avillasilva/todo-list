@@ -164,6 +164,7 @@ def update_task(request, task_id):
         task.category = category
         task.title = data.get('title')
         task.description = data.get('description')
+        task.finished = data.get('finished')
         task.save()
         return JsonResponse(task_encoder(task), safe=False)
     except Exception as e:

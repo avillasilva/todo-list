@@ -29,6 +29,7 @@ class Task(models.Model):
     deadline = models.DateTimeField(
         default=django.utils.timezone.now()+timedelta(hours=6))
     description = models.CharField(max_length=200)
+    finished = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
