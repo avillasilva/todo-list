@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'todorest.apps.TodorestConfig'
+    'todorest.apps.TodorestConfig',
+    'notes.apps.NotesConfig'
 ]
 
 MIDDLEWARE = [
