@@ -58,6 +58,17 @@ def get_notes(request):
     except Exception as e:
         return HttpResponse(str(e), status=400)
 
+def get_note(request, note_id):
+    try:
+        note = Note.objects.get(pk=note_id)
+        if note.ownerList.owner.id != request.user.id:
+            raise Exception('Not allowed!')
+
+        return JsonResponse(note_encoder(note),safe = False)
+    except Exception as e:
+        return HttpResponse(str(e),status = 400)
+
+
 # @login_required
 # def crud_note(request, note_id):
 #     if request.method == 'GET':
