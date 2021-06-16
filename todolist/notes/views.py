@@ -62,7 +62,7 @@ def delete_note(request, note_id):
     try:
         note = Note.objects.get(pk=note_id)
 
-        if note.ownerList.owner.id != request.user.id:
+        if note.owner.id != request.user.id:
             raise Exception('Not allowed')
         
         note.delete()
@@ -89,7 +89,7 @@ def get_notes(request):
 def get_note(request, note_id):
     try:
         note = Note.objects.get(pk=note_id)
-        if note.ownerList.owner.id != request.user.id:
+        if note.owner.id != request.user.id:
             raise Exception('Not allowed!')
 
         return JsonResponse(note_encoder(note),safe = False)
