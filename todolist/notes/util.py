@@ -34,6 +34,9 @@ class Proxy_Model_Stub:
     
     def delete(self, request, id):
         return self._proxy_('DELETE', self.suburl+str(id), request)
+    
+    def exists(self, request, id):
+        return self.get(request, id).status_code < 400
 
 
 TaskList_Proxy = Proxy_Model_Stub('tasklist')
