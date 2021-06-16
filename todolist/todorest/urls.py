@@ -16,5 +16,8 @@ urlpatterns = [
     path('task/<int:task_id>', views.crud_task, name='crud_task'),
 
     path('category/', views.create_or_get_categories, name='create_or_get_categories'),
-    path('category/<int:category_id>', views.crud_category, name='crud_category')
+    path('category/<int:category_id>', views.crud_category, name='crud_category'),
+
+    path('note/', views.create_or_get_notes, name='create_or_get_notes'),
+    path('note/<int:note_id>', views.crud_category, name='crud_note')
 ]

@@ -22,3 +22,16 @@ def create_note(request):
 def create_or_get_notes(request):
     if request.method == 'POST':
         return create_note(request)
+
+
+def get_notes(request):
+    try:
+        notelists = Note.objects.filter(owner=request.user)
+        notes = []
+        for notelist in notelists:
+            for note in Note.objects.filter(ownerList=notelist.id):
+                notes.append(note_encoder(notes))
+        
+        return JsonResponse(notes, safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
