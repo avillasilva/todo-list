@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 import json
@@ -8,12 +9,25 @@ from .models import *
 
 
 def register_user(request):
-    return proxy_todolist(request, 'register')
+    req = proxy_todolist(request, 'register')
+    if req.status_code == 200:
+        user = User.objects.create_user(request.POST['username'], 
+                    request.POST['email'], 
+                    request.POST['password'])
+        user.save()
+    return req
 
 def login_user(request):
-    return proxy_todolist(request, 'login')
+    req = proxy_todolist(request, 'login')
+    if req.status_code == 200:
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        login(request, user)
+    return req
 
 def logout_user(request):
+    logout(request)
     return proxy_todolist(request, 'logout')
 
 
@@ -24,7 +38,7 @@ def create_note(request):
             'title'), content=data.get('content'), tasklist=data.get('tasklist'))
         
         note.save()
-        return JsonResponse(note_encoder(note))
+        return JsonResponse(note_encoder(note, request))
     except User.DoesNotExist:
         return HttpResponse('User does not exist', status=400)
 
@@ -60,19 +74,17 @@ def delete_note(request, note_id):
 def create_or_get_notes(request):
     if request.method == 'POST':
         return create_note(request)
+    elif request.method == 'GET':
+        return get_notes(request)
 
 
 def get_notes(request):
-    try:
-        notelists = Note.objects.filter(owner=request.user)
-        notes = []
-        for notelist in notelists:
-            for note in Note.objects.filter(ownerList=notelist.id):
-                notes.append(note_encoder(notes))
-        
-        return JsonResponse(notes, safe=False)
-    except Exception as e:
-        return HttpResponse(str(e), status=400)
+    notelists = Note.objects.filter(owner=request.user)
+    notes = []
+    for note in notelists:
+        notes.append(note_encoder(note, request))
+    
+    return JsonResponse(notes, safe=False)
 
 def get_note(request, note_id):
     try:
