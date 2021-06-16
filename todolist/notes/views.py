@@ -1,9 +1,20 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import *
 import json
 from .serializers import *
+from .util import *
+from .models import *
+
+
+def register_user(request):
+    return proxy_todolist(request, 'register')
+
+def login_user(request):
+    return proxy_todolist(request, 'login')
+
+def logout_user(request):
+    return proxy_todolist(request, 'logout')
 
 
 def create_note(request):
