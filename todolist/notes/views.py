@@ -28,6 +28,22 @@ def create_note(request):
     except User.DoesNotExist:
         return HttpResponse('User does not exist', status=400)
 
+def update_note(request, note_id):
+    data = json.loads(request.body.decode('utf-8'))
+    try:
+        note = Note.objects.get(pk=note_id)
+
+        if note.owner.id != request.user.id:
+            raise Exception('Not allowed')
+
+        note.title = data.get('title')
+        note.content = data.get('content')
+        note.tasklist = data.get('tasklist')
+        note.save()
+        return JsonResponse(note_encoder(note), safe=False)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
+
 def delete_note(request, note_id):
     try:
         note = Note.objects.get(pk=note_id)
