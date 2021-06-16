@@ -213,7 +213,7 @@ def create_category(request):
         category.save()
         return JsonResponse(category_encoder(category), safe=False)
     except User.DoesNotExist:
-        return HttpResponse('User does not exist')
+        return HttpResponse('User does not exist', status=400)
 
 def get_categories(request):
     try:

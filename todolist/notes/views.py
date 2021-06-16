@@ -34,6 +34,9 @@ def logout_user(request):
 def create_note(request):
     data = json.loads(request.body.decode('utf-8'))
     try:
+        if not TaskList_Proxy.exists(request, data.get('tasklist')):
+            raise Exception('Not allowed')
+
         note = Note(owner=request.user, title=data.get(
             'title'), content=data.get('content'), tasklist=data.get('tasklist'))
         
@@ -47,14 +50,14 @@ def update_note(request, note_id):
     try:
         note = Note.objects.get(pk=note_id)
 
-        if note.owner.id != request.user.id:
+        if note.owner.id != request.user.id or not TaskList_Proxy.exists(request, data.get('tasklist')):
             raise Exception('Not allowed')
 
         note.title = data.get('title')
         note.content = data.get('content')
         note.tasklist = data.get('tasklist')
         note.save()
-        return JsonResponse(note_encoder(note), safe=False)
+        return JsonResponse(note_encoder(note, request), safe=False)
     except Exception as e:
         return HttpResponse(str(e), status=400)
 
@@ -92,7 +95,7 @@ def get_note(request, note_id):
         if note.ownerList.owner.id != request.user.id:
             raise Exception('Not allowed!')
 
-        return JsonResponse(note_encoder(note),safe = False)
+        return JsonResponse(note_encoder(note, request),safe = False)
     except Exception as e:
         return HttpResponse(str(e),status = 400)
 
