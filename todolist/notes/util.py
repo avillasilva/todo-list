@@ -27,13 +27,13 @@ class Proxy_Model_Stub:
         return self._proxy_('POST', self.suburl, request, body=body)
     
     def get(self, request, id): # aka fetch
-        return self._proxy_('GET', self.suburl+id, request)
+        return self._proxy_('GET', self.suburl+str(id), request)
     
     def put(self, request, id, body): # aka update
-        return self._proxy_('PUT', self.suburl+id, request, body=body)
+        return self._proxy_('PUT', self.suburl+str(id), request, body=body)
     
     def delete(self, request, id):
-        return self._proxy_('DELETE', self.suburl+id, request)
+        return self._proxy_('DELETE', self.suburl+str(id), request)
 
 
 TaskList_Proxy = Proxy_Model_Stub('tasklist')
