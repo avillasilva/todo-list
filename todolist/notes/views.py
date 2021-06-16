@@ -100,13 +100,13 @@ def get_note(request, note_id):
         return HttpResponse(str(e),status = 400)
 
 
-# @login_required
-# def crud_note(request, note_id):
-#     if request.method == 'GET':
-#         return get_note(request, note_id)
-#     elif request.method == 'PUT':
-#         return update_note(request, note_id)
-#     elif request.method == 'DELETE':
-#         return delete_note(request, note_id)
-#     else:
-#         return HttpResponse(status=400)
+@login_required
+def crud_note(request, note_id):
+    if request.method == 'GET':
+        return get_note(request, note_id)
+    elif request.method == 'PUT':
+        return update_note(request, note_id)
+    elif request.method == 'DELETE':
+        return delete_note(request, note_id)
+    else:
+        return HttpResponse(status=400)

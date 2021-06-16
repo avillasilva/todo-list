@@ -11,7 +11,7 @@ def proxy_todolist(request, suburl, method=None, *args, **kwargs):
     kwargs.setdefault('cookies', request.COOKIES)
     req = fetch_todolist(method or request.method, suburl, *args, **kwargs)
     # req = requests.request(method or request.method, proxy_url+suburl, data=request.POST, headers=request.headers, cookies=request.COOKIES)
-    return HttpResponse(req, headers=req.headers)
+    return HttpResponse(req, headers=req.headers, status=req.status_code)
 
 class Proxy_Model_Stub:
     def __init__(self, suburl):

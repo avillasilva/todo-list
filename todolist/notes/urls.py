@@ -10,5 +10,5 @@ urlpatterns = [
     path('logout', views.logout_user),
     
     path('note/', views.create_or_get_notes, name='create_or_get_notes'),
-    # path('note/<int:note_id>', views.crud_note, name='crud_note'),
+    path('note/<int:note_id>', views.crud_note, name='crud_note'),
 ]
