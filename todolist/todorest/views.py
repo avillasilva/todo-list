@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from todolist.util import token_or_cookie_required, generate_user_token
 from .models import *
 import json
 from datetime import datetime
 from .serializers import *
+
+TOKEN_FIELD = 'TOKEN'
 
 def register_user(request):
     if request.method == 'POST':
@@ -24,7 +26,7 @@ def login_user(request):
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
-        return HttpResponse('Logged in', status=200)
+        return HttpResponse(TOKEN_FIELD + ':' + generate_user_token(user), status=200)
     else:
         return HttpResponse('Error', status=400)
 
@@ -89,14 +91,14 @@ def delete_list(request, list_id):
     except TaskList.DoesNotExist:
         return HttpResponse('Tasklist does not exist', status=400)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def create_or_get_lists(request):
     if request.method == 'POST':
         return create_list(request)
     elif request.method == 'GET':
         return get_lists(request)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def crud_list(request, list_id):
     if request.method == 'GET':
         return get_list(request, list_id)
@@ -183,14 +185,14 @@ def delete_task(request, task_id):
     except Task.DoesNotExist:
         return HttpResponse('Task does not exist', status=400)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def create_or_get_tasks(request):
     if request.method == 'POST':
         return create_task(request)
     elif request.method == 'GET':
         return get_tasks(request)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def crud_task(request, task_id):
     if request.method == 'GET':
         return get_task(request, task_id)
@@ -257,14 +259,14 @@ def delete_category(request, category_id):
     except Exception as e:
         return HttpResponse(str(e), status=400)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def create_or_get_categories(request):
     if request.method == 'POST':
         return create_category(request)
     elif request.method == 'GET':
         return get_categories(request)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def crud_category(request, category_id):
     if request.method == 'GET':
         return get_category(request, category_id)
