@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.decorators import login_required
+from todolist.util import token_or_cookie_required, generate_user_token
 import json
 from .serializers import *
 from .util import *
 from .models import *
 
+TOKEN_FIELD = 'TOKEN-NOTES'
 
 def register_user(request):
     req = proxy_todolist(request, 'register')
@@ -19,12 +20,14 @@ def register_user(request):
 
 def login_user(request):
     req = proxy_todolist(request, 'login')
+    resp = HttpResponse(req)
     if req.status_code == 200:
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
         login(request, user)
-    return req
+        resp.write('\n' + TOKEN_FIELD + ':' + generate_user_token(user))
+    return resp
 
 def logout_user(request):
     logout(request)
@@ -73,7 +76,7 @@ def delete_note(request, note_id):
     except note.DoesNotExist:
         return HttpResponse('Note does not exist', status=400)
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def create_or_get_notes(request):
     if request.method == 'POST':
         return create_note(request)
@@ -100,7 +103,7 @@ def get_note(request, note_id):
         return HttpResponse(str(e),status = 400)
 
 
-@login_required
+@token_or_cookie_required(token_field=TOKEN_FIELD)
 def crud_note(request, note_id):
     if request.method == 'GET':
         return get_note(request, note_id)
