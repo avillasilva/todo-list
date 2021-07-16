@@ -113,8 +113,8 @@ def crud_list(request, list_id):
 def create_task(request):
     data = json.loads(request.body.decode('utf-8'))
     try:
-        tasklist = TaskList.objects.get(pk=data.get('list_id'))
-        category = Category.objects.get(pk=data.get('category_id'))
+        tasklist = TaskList.objects.get(pk=data.get('tasklist'))
+        category = Category.objects.get(pk=data.get('category'))
 
         if tasklist.owner.id != request.user.id or category.owner.id != request.user.id:
             raise Exception('Not allowed')
