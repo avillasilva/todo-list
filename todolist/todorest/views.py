@@ -155,8 +155,8 @@ def get_task(request, task_id):
 def update_task(request, task_id):
     data = json.loads(request.body.decode('utf-8'))
     try:
-        tasklist = TaskList.objects.get(pk=data.get('list_id'))
-        category = Category.objects.get(pk=data.get('category_id'))
+        tasklist = TaskList.objects.get(pk=data.get('tasklist'))
+        category = Category.objects.get(pk=data.get('category'))
         task = Task.objects.get(pk=task_id)
 
         if task.ownerList.owner.id != request.user.id or tasklist.owner.id != request.user.id or category.owner.id != request.user.id:
